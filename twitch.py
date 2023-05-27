@@ -59,13 +59,17 @@ def get_all_streams():
 
     db_insert_values = []
 
+    print(raw_streams)
+
     for raw_stream in raw_streams:
         clean_stream = {
             'user_name': raw_stream['user_name'],
             'title': raw_stream['title'],
             'viewer_count': raw_stream['viewer_count'],
             'stream_thumbnail_url': raw_stream['thumbnail_url'].replace('{width}', str(STREAM_THUMBNAIL_SIZE[0])).replace('{height}', str(STREAM_THUMBNAIL_SIZE[1])),
-            'platform': 'twitch'
+            'platform': 'twitch',
+            'category': raw_stream['game_name'],
+            'stream_url': f'https://twitch.tv/{raw_stream["user_name"]}'
         }
 
         if clean_stream['user_name'] not in user_thumbnails:

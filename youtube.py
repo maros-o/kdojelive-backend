@@ -8,9 +8,7 @@ load_dotenv()
 API_KEY = os.getenv('YOUTUBE_API_KEY')
 YT = build('youtube', 'v3', developerKey=API_KEY)
 
-
 youtube_streams = []
-# youtube_channels = db.get_youtube_channels()
 
 
 def get_channel_info(channel_id):
@@ -23,14 +21,7 @@ def get_channel_info(channel_id):
     return response["items"][0]["snippet"]
 
 
-def is_channel_czech_or_slovak(channel_id):
-    channel_info = get_channel_info(channel_id)
-    country = channel_info["country"]
-
-    return country == "CZ" or country == "SK"
-
-
-def is_channel_live(channel_id):
+def get_channel_streams(channel_id):
     request = YT.search().list(
         part="snippet",
         channelId=channel_id,
@@ -39,16 +30,79 @@ def is_channel_live(channel_id):
     )
     response = request.execute()
 
-    print(response)
+    streams = response["items"]
 
-    return len(response["items"]) > 0
+    if len(streams) == 0:
+        return []
+
+    stream_info = []
+
+    for stream in streams:
+        video_id = stream["id"]["videoId"]
+        video_request = YT.videos().list(
+            part="liveStreamingDetails",
+            id=video_id
+        )
+        video_response = video_request.execute()
+        live_streaming_details = video_response["items"][0]["liveStreamingDetails"]
+        viewer_count = live_streaming_details["concurrentViewers"]
+
+        stream_info.append({
+            "title": stream["snippet"]["title"],
+            "viewer_count": viewer_count,
+            "thumbnail": stream["snippet"]["thumbnails"]["medium"]["url"],
+            'stream_url': f'https://youtube.com/watch?v={video_id}'
+        })
+
+    return stream_info
 
 
-CHANNEL_ID = "UCROnsopSryzM2WaxxeNICOA"
+def insert_channel(channel_id):
+    channel_info = get_channel_info(channel_id)
+    channel_name = channel_info["title"]
+    channel_thumbnail = channel_info["thumbnails"]["medium"]["url"]
 
-print(is_channel_live(CHANNEL_ID))
-print(is_channel_czech_or_slovak(CHANNEL_ID))
+    db.insert_youtube_channels([(channel_id, channel_name, channel_thumbnail)])
+
+
+def get_streams_all():
+    new_streams = []
+
+    channels = db.get_youtube_channels()
+
+    for channel in channels:
+        channel_id = channel[0]
+        channel_name = channel[1]
+        channel_thumbnail = channel[2]
+
+        streams = get_channel_streams(channel_id)
+
+        for stream in streams:
+            stream_title = stream["title"]
+            stream_thumbnail = stream["thumbnail"]
+            stream_viewer_count = stream["viewer_count"]
+
+            clean_stream = {
+                'user_name': channel_name,
+                'title': stream_title,
+                'viewer_count': stream_viewer_count,
+                'stream_thumbnail_url': stream_thumbnail,
+                'platform': 'youtube',
+                'category': None,
+                'user_thumbnail_url': channel_thumbnail,
+                'stream_url': stream["stream_url"]
+            }
+
+            new_streams.append(clean_stream)
+
+    return new_streams
+
+
+def update_youtube_streams():
+    global youtube_streams
+    youtube_streams = get_streams_all()
 
 
 def get_streams():
+    update_youtube_streams()
     return youtube_streams

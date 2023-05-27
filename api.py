@@ -11,7 +11,7 @@ def streams():
     start = time.time()
 
     streams = twitch.get_streams()
-    # streams += youtube.get_streams()
+    streams += youtube.get_streams()
 
     return {
         "executing_time": f"{round(time.time() - start, 3)} seconds",
