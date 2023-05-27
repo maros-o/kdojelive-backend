@@ -1,10 +1,14 @@
 import requests
-import threading
 import db
+import os
+import threading
+from dotenv import load_dotenv
+
+load_dotenv()
 
 UPDATE_TIME = 120.0
-CLIENT_ID = 'ckotqo211roxt5v6pyu2oygqbznwar'
-OAUTH_TOKEN = 'ofl1s3grn4w3t1r88yyjdl7lksqd0p'
+CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
+OAUTH_TOKEN = os.getenv('TWITCH_OAUTH_TOKEN')
 LANGUAGE_CODES = {
     'cs': 60,
     'sk': 20,

@@ -1,12 +1,16 @@
 import psycopg2
+import os
 from enum import Enum
+from dotenv import load_dotenv
+
+load_dotenv()
 
 CONNECTION = {
-    "host": "containers-us-west-100.railway.app",
-    "port": "7529",
-    "database": "railway",
-    "user": "postgres",
-    "password": "O4MfUYqXnTJJWSqfJy3I"
+    "host": os.getenv('DB_HOST'),
+    "port": os.getenv('DB_PORT'),
+    "database": os.getenv('DB_NAME'),
+    "user": os.getenv('DB_USER'),
+    "password": os.getenv('DB_PASS')
 }
 
 

@@ -1,6 +1,7 @@
 import fastapi
 import time
 import twitch
+import youtube
 
 app = fastapi.FastAPI()
 
