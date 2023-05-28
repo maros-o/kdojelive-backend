@@ -2,6 +2,7 @@ import fastapi
 import time
 import twitch
 import youtube
+import trovo
 
 app = fastapi.FastAPI()
 
@@ -10,8 +11,9 @@ app = fastapi.FastAPI()
 def streams():
     start = time.time()
 
-    streams = twitch.get_streams()
-    streams += youtube.get_streams()
+    #streams = twitch.get_streams()
+    streams = youtube.get_streams()
+    #streams += trovo.get_streams()
 
     return {
         "executing_time": f"{round(time.time() - start, 3)} seconds",
