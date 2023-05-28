@@ -6,7 +6,6 @@ import time
 import requests
 import re
 import json
-from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -27,16 +26,6 @@ def get_channel_info(channel_id):
     return response["items"][0]
 
 
-def get_channel_activity(channel_id):
-    request = YT.activities().list(
-        part="snippet",
-        channelId=channel_id
-    )
-    response = request.execute()
-
-    return response["items"]
-
-
 def get_video_info(video_id):
     request = YT.videos().list(
         part="snippet,liveStreamingDetails",
@@ -47,75 +36,84 @@ def get_video_info(video_id):
     return response["items"][0]
 
 
-def get_channel_streams(channel_id):
-    return []
-    # url = f"https://www.googleapis.com/youtube/v3/search?key={API_KEY}&channelId={channel_id}&part=snippet,id&eventType=live&type=video"
-    # response = requests.get(url).json()
-
-    # streams = response["items"]
-
-    # if len(streams) == 0:
-    #     return []
-
-    # stream_info = []
-
-    # for stream in streams:
-    #     video_id = stream["id"]["videoId"]
-
-    #     video = get_video_info(video_id)
-
-    #     live_streaming_details = video["liveStreamingDetails"]
-    #     viewer_count = live_streaming_details["concurrentViewers"]
-
-    #     stream_info.append({
-    #         "title": stream["snippet"]["title"],
-    #         "viewer_count": viewer_count,
-    #         "thumbnail": stream["snippet"]["thumbnails"]["medium"]["url"],
-    #         'stream_url': f'https://youtube.com/watch?v={video_id}'
-    #     })
-
-    # return stream_info
-
-
 def insert_channel(channel_id):
     channel_info = get_channel_info(channel_id)
-    channel_name = channel_info["title"]
-    channel_thumbnail = channel_info["thumbnails"]["medium"]["url"]
+    channel_name = channel_info["snippet"]["title"]
+    channel_thumbnail = channel_info["snippet"]["thumbnails"]["medium"]["url"]
 
     db.insert_youtube_channels([(channel_id, channel_name, channel_thumbnail)])
 
 
 def get_streams_all():
     new_streams = []
-
     channels = db.get_youtube_channels()
 
     for channel in channels:
         channel_id = channel[0]
+
+        print(f'checking channel: {channel[1]}')
+
+        stream_video_id = get_livestream_id(channel_id)
+        if stream_video_id is None:
+            continue
+
         channel_name = channel[1]
         channel_thumbnail = channel[2]
+        stream_info = get_video_info(stream_video_id)
 
-        streams = get_channel_streams(channel_id)
+        stream_title = stream_info["snippet"]["title"]
+        stream_thumbnail = stream_info["snippet"]["thumbnails"]["medium"]["url"]
 
-        for stream in streams:
-            stream_title = stream["title"]
-            stream_thumbnail = stream["thumbnail"]
-            stream_viewer_count = stream["viewer_count"]
+        live_streaming_details = stream_info['liveStreamingDetails']
 
-            clean_stream = {
-                'user_name': channel_name,
-                'title': stream_title,
-                'viewer_count': stream_viewer_count,
-                'stream_thumbnail_url': stream_thumbnail,
-                'platform': 'youtube',
-                'category': None,
-                'user_thumbnail_url': channel_thumbnail,
-                'stream_url': stream["stream_url"]
-            }
+        if "concurrentViewers" in live_streaming_details:
+            stream_viewer_count = int(
+                live_streaming_details["concurrentViewers"])
+        else:
+            stream_viewer_count = 0
 
-            new_streams.append(clean_stream)
+        clean_stream = {
+            'user_name': channel_name,
+            'title': stream_title,
+            'viewer_count': stream_viewer_count,
+            'stream_thumbnail_url': stream_thumbnail,
+            'platform': 'youtube',
+            'category': None,
+            'stream_url': f'https://www.youtube.com/watch?v={stream_video_id}',
+            'user_thumbnail_url': channel_thumbnail,
+        }
+
+        new_streams.append(clean_stream)
 
     return new_streams
+
+
+def get_livestream_id(channel_id):
+    try:
+        url = f'https://youtube.com/channel/{channel_id}/live/?hl=en&noapp=1'
+        response = session.get(url, cookies={
+            'CONSENT': f'YES+cb.20210328-17-p0.en-GB+FX+{int(time.time())}'
+        }).text
+
+        href_url_match = re.search(
+            r'rel="canonical" href="(.*?)"', response)
+
+        if href_url_match:
+            href_url = href_url_match.group(1)
+
+            if href_url.startswith('https://www.youtube.com/channel/'):
+                return None
+
+            if 'publishDate":{"simpleText":"Scheduled' in response:
+                return None
+
+            return href_url.split('=')[1]
+
+        return None
+
+    except requests.RequestException as e:
+        print(f'Error occurred during the request: {str(e)}')
+        return None
 
 
 def update_youtube_streams():
@@ -127,71 +125,17 @@ def get_streams():
     update_youtube_streams()
     return youtube_streams
 
-
-# def get_live(channel_id):
-#     response = requests.get(
-#         f'https://youtube.com/channel/{channel_id}/live/', cookies={'CONSENT': 'YES+cb.20210328-17-p0.en-GB+FX+{}'.format(int(time.time()))})
-
-#     # get href of <link rel="canonical" href="https://www.youtube.com/watch?v=uD0X6gvrisc" />
-
-#     tree = HTMLParser(response.text)
-#     stream = {}
-
-#     for link in tree.css('link'):
-#         if link.attributes.get('rel') == 'canonical':
-#             href_url = link.attributes.get('href')
-
-#             if href_url.startswith('https://www.youtube.com/channel/'):
-#                 return None
-
-#             stream['stream_url'] = href_url
-
-#     title_match = re.search(
-#         r'videoDetails":{"playerOverlayVideoDetailsRenderer":{"title":{"simpleText":"(.*?)"}', response.text)
-#     if title_match:
-#         stream['title'] = title_match.group(1)
-
-#     viewer_count_match = re.search(
-#         r'Právě sleduje: "},{"text":"(.*?)"}', response.text)
-#     if viewer_count_match:
-#         stream['viewer_count'] = viewer_count_match.group(1)
-
-#     print(response.text)
-#     print(stream)
-
-#     return response.text
+# TODO: add update to current streams every 5 minutes with just yt api
 
 
-def get_livestream_id(channel_id):
-    response = session.get(f'https://youtube.com/channel/{channel_id}/live/?hl=en', cookies={
-        'CONSENT': 'YES+cb.20210328-17-p0.en-GB+FX+{}'.format(int(time.time()))
-    })
-    if response.status_code != 200:
-        return None
+# start = time.time()
 
-    soup = BeautifulSoup(response.content, 'lxml')
-    link = soup.find('link', rel='canonical')
+# # print(get_livestream_id('UCLqMHRtQA10qPQtG8qKCp_w'))
+# # streams = get_video_info(get_livestream_id('UCp48ChS_trJdlvkbwACxXNA'))
 
-    if not link:
-        return None
+# streams = get_streams_all()
 
-    href_url = link.get('href')
-    if href_url.startswith('https://www.youtube.com/channel/'):
-        return None
+# with open('results/youtube.json', 'w') as f:
+#     f.write(json.dumps(streams))
 
-    scheduled_match = re.search(
-        r'publishDate":{"simpleText":"Scheduled', response.text)
-
-    if scheduled_match:
-        return None
-
-    return href_url.split('=')[1]
-
-
-start = time.time()
-
-for i in range(100):
-    print(get_livestream_id('UCLqMHRtQA10qPQtG8qKCp_w'))
-    print(get_livestream_id('UCp48ChS_trJdlvkbwACxXNA'))
-
-print(f"{round(time.time() - start, 3)} seconds")
+# print(f"{round(time.time() - start, 3)} seconds")

@@ -1,7 +1,8 @@
 from playwright.sync_api import sync_playwright
 from selectolax.parser import HTMLParser
 import re
-
+import json
+import time
 
 trovo_streams = []
 
@@ -24,7 +25,7 @@ def scrape_streams():
 
             stream['user_name'] = item.css_first(".nickname").text()
             stream['title'] = item.css_first(".main-desc").text()
-            stream['viewer_count'] = item.css_first(".watch-num").text()
+            stream['viewer_count'] = int(item.css_first(".watch-num").text())
 
             style = item.css_first(".cover").attributes['style']
             match = re.search(url_pattern, style)
@@ -54,3 +55,11 @@ def get_streams():
     global trovo_streams
     update_trovo_streams()
     return trovo_streams
+
+
+start = time.time()
+
+with open('results/trovo.json', 'w', encoding='utf-8') as f:
+    f.write(json.dumps(get_streams()))
+
+print(f"{round(time.time() - start, 3)} seconds")

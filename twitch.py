@@ -3,6 +3,8 @@ import db
 import os
 import threading
 from dotenv import load_dotenv
+import time
+import json
 
 load_dotenv()
 
@@ -59,8 +61,6 @@ def get_all_streams():
 
     db_insert_values = []
 
-    print(raw_streams)
-
     for raw_stream in raw_streams:
         clean_stream = {
             'user_name': raw_stream['user_name'],
@@ -98,3 +98,13 @@ def get_streams():
     global twitch_streams
     update_twitch_streams()
     return twitch_streams
+
+
+# start = time.time()
+
+# streams = get_all_streams()
+
+# with open('results/twitch.json', 'w') as f:
+#     f.write(json.dumps(streams))
+
+# print(f"{round(time.time() - start, 3)} seconds")
