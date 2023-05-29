@@ -6,12 +6,11 @@ import time
 
 load_dotenv()
 
-UPDATE_TIME = 120.0
 CLIENT_ID = os.getenv('TWITCH_CLIENT_ID')
 OAUTH_TOKEN = os.getenv('TWITCH_OAUTH_TOKEN')
 LANGUAGE_CODES = {
-    'cs': 60,
-    'sk': 20,
+    'cs': 80,
+    'sk': 30,
 }
 STREAM_THUMBNAIL_SIZE = (320, 180)
 HEADERS = {
