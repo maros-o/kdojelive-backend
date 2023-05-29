@@ -3,15 +3,17 @@ import time
 import twitch
 import youtube
 import threading
+import requests
 
 
 app = fastapi.FastAPI()
-lock = threading.Lock()
+streams_lock = threading.Lock()
 
 UPDATE_INTERVAL = 60 * 5
 YOUTUBE_FULL_UPDATE_CYCLES = 3
 
 streams = []
+trovo_streams = []
 
 
 def update_streams():
@@ -35,7 +37,7 @@ def update_streams():
 
         new_streams.sort(key=lambda x: x['viewer_count'], reverse=True)
 
-        with lock:
+        with streams_lock:
             streams = new_streams
 
         youtube_full_update_counter += 1
@@ -59,7 +61,7 @@ def start_up():
 def get_streams():
     global streams
 
-    with lock:
+    with streams_lock:
         return streams
 
 
