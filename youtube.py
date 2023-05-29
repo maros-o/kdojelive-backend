@@ -5,7 +5,6 @@ import db
 import time
 import requests
 import re
-import json
 
 load_dotenv()
 

@@ -1,10 +1,8 @@
 import requests
 import db
 import os
-import threading
 from dotenv import load_dotenv
 import time
-import json
 
 load_dotenv()
 
