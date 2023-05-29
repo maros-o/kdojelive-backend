@@ -91,20 +91,12 @@ def get_all_streams():
 
 def update_twitch_streams():
     global twitch_streams
+    start = time.time()
+    print(' updating twitch streams..')
     twitch_streams = get_all_streams()
+    print(f' twitch streams updated in {round(time.time() - start, 3)} secs')
 
 
 def get_streams():
     global twitch_streams
-    update_twitch_streams()
     return twitch_streams
-
-
-# start = time.time()
-
-# streams = get_all_streams()
-
-# with open('results/twitch.json', 'w') as f:
-#     f.write(json.dumps(streams))
-
-# print(f"{round(time.time() - start, 3)} seconds")

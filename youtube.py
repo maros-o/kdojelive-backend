@@ -51,8 +51,6 @@ def get_streams_all():
     for channel in channels:
         channel_id = channel[0]
 
-        print(f'checking channel: {channel[1]}')
-
         stream_video_id = get_livestream_id(channel_id)
         if stream_video_id is None:
             continue
@@ -118,24 +116,39 @@ def get_livestream_id(channel_id):
 
 def update_youtube_streams():
     global youtube_streams
+
+    start = time.time()
+    print(' updating youtube streams..')
     youtube_streams = get_streams_all()
+    print(f' youtube streams updated in {round(time.time() - start, 3)} secs')
+
+
+def update_youtube_current_streams():
+    global youtube_streams
+
+    start = time.time()
+    print(' updating active youtube streams..')
+
+    for stream in youtube_streams:
+        stream_info = get_video_info(stream['stream_url'].split('=')[1])
+        live_streaming_details = stream_info['liveStreamingDetails']
+
+        if "actualEndTime" in live_streaming_details:
+            youtube_streams.remove(stream)
+            continue
+
+        stream['title'] = stream_info['snippet']['title']
+
+        if "concurrentViewers" in live_streaming_details:
+            stream['viewer_count'] = int(
+                live_streaming_details['concurrentViewers'])
+        else:
+            stream['viewer_count'] = 0
+
+    print(
+        f' active youtube streams updated in {round(time.time() - start, 3)} secs')
 
 
 def get_streams():
-    update_youtube_streams()
+    global youtube_streams
     return youtube_streams
-
-# TODO: add update to current streams every 5 minutes with just yt api
-
-
-# start = time.time()
-
-# # print(get_livestream_id('UCLqMHRtQA10qPQtG8qKCp_w'))
-# # streams = get_video_info(get_livestream_id('UCp48ChS_trJdlvkbwACxXNA'))
-
-# streams = get_streams_all()
-
-# with open('results/youtube.json', 'w') as f:
-#     f.write(json.dumps(streams))
-
-# print(f"{round(time.time() - start, 3)} seconds")
