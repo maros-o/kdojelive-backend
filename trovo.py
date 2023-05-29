@@ -2,7 +2,7 @@ import requests
 import time
 
 trovo_streams = []
-MAX_DELAY = 60 * 5
+MAX_DELAY = 60 * 15
 
 
 def get_all_streams():
