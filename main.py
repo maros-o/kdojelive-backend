@@ -1,4 +1,5 @@
 import fastapi
+from fastapi.middleware.cors import CORSMiddleware
 import time
 import threading
 
@@ -7,6 +8,14 @@ import twitch
 import youtube
 
 app = fastapi.FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
 streams_lock = threading.Lock()
 
 UPDATE_INTERVAL = 60 * 5
