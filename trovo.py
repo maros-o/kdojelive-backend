@@ -7,8 +7,12 @@ MAX_DELAY = 60 * 15
 
 def get_all_streams():
     url = 'https://raw.githubusercontent.com/maros-o/kdojelive-trovo/main/streams.json'
-    response = requests.get(url)
-    data = response.json()
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+    except (requests.RequestException, ValueError):
+        return []
 
     if response.status_code != 200:
         return []

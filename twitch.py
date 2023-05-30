@@ -20,10 +20,14 @@ HEADERS = {
 
 
 def request_data(url):
-    response = requests.get(url, headers=HEADERS)
-    data = response.json()['data']
-
-    return data
+    try:
+        response = requests.get(url, headers=HEADERS)
+        response.raise_for_status()
+        data = response.json().get('data', [])
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while making a request: {e}")
+        return []
 
 
 def get_user_thumbnail_url(user_id):
