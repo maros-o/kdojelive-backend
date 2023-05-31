@@ -38,16 +38,6 @@ def get_user_thumbnail_url(user_id):
     return user_thumbnail_url
 
 
-def set_user_thumbnails():
-    user_thumbnails = {}
-    raw_thumbnails = db.get_twitch_user_thumbnails()
-
-    for thumbnail in raw_thumbnails:
-        user_thumbnails[thumbnail[0]] = thumbnail[1]
-
-    return user_thumbnails
-
-
 twitch_streams = []
 user_thumbnails = {}
 
