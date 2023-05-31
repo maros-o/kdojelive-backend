@@ -60,8 +60,6 @@ def get_all_streams():
         url = f'https://api.twitch.tv/helix/streams?language={language_code[0]}&first={language_code[1]}'
         raw_streams += request_data(url)
 
-    db_insert_values = []
-
     for raw_stream in raw_streams:
         clean_stream = {
             'user_name': raw_stream['user_name'],
@@ -75,17 +73,10 @@ def get_all_streams():
 
         if clean_stream['user_name'] not in user_thumbnails:
             user_thumbnail_url = get_user_thumbnail_url(raw_stream['user_id'])
-
             user_thumbnails[raw_stream['user_name']] = user_thumbnail_url
-            db_insert_values.append(
-                (raw_stream['user_name'], user_thumbnail_url))
 
         clean_stream['user_thumbnail_url'] = user_thumbnails[raw_stream['user_name']]
-
         new_streams.append(clean_stream)
-
-    if len(db_insert_values) > 0:
-        db.insert_twitch_user_thumbnails(db_insert_values)
 
     return new_streams
 
