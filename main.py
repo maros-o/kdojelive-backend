@@ -19,7 +19,8 @@ app.add_middleware(
 streams_lock = threading.Lock()
 
 UPDATE_INTERVAL = 60 * 5
-YOUTUBE_FULL_UPDATE_CYCLES = 3
+YOUTUBE_FULL_UPDATE_INTERVAL = 3
+TWITCH_RESET_USER_THUMBNAILS_INTERVAL = 200
 
 streams = []
 
@@ -27,6 +28,7 @@ streams = []
 def update_streams():
     global streams
     youtube_full_update_counter = 0
+    twitch_reset_user_thumbnails_counter = 0
 
     while True:
         start = time.time()
@@ -51,8 +53,13 @@ def update_streams():
             streams = new_streams
 
         youtube_full_update_counter += 1
-        if youtube_full_update_counter == YOUTUBE_FULL_UPDATE_CYCLES:
+        if youtube_full_update_counter == YOUTUBE_FULL_UPDATE_INTERVAL:
             youtube_full_update_counter = 0
+
+        twitch_reset_user_thumbnails_counter += 1
+        if twitch_reset_user_thumbnails_counter == TWITCH_RESET_USER_THUMBNAILS_INTERVAL:
+            twitch.reset_user_thumbnails()
+            twitch_reset_user_thumbnails_counter = 0
 
         exec_time = time.time() - start
         print(f'streams updated in {round(exec_time, 3)} secs')

@@ -42,6 +42,11 @@ twitch_streams = []
 user_thumbnails = {}
 
 
+def reset_user_thumbnails():
+    global user_thumbnails
+    user_thumbnails = {}
+
+
 def get_all_streams():
     raw_streams = []
     new_streams = []
