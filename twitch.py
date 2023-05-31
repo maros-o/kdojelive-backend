@@ -49,7 +49,7 @@ def set_user_thumbnails():
 
 
 twitch_streams = []
-user_thumbnails = set_user_thumbnails()
+user_thumbnails = {}
 
 
 def get_all_streams():
