@@ -44,8 +44,8 @@ def update_streams():
 
         new_streams += youtube.get_streams()
 
-        trovo.update_trovo_streams()
-        new_streams += trovo.get_streams()
+        #trovo.update_trovo_streams()
+        #new_streams += trovo.get_streams()
 
         new_streams.sort(key=lambda x: x['viewer_count'], reverse=True)
 
