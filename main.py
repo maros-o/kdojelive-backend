@@ -2,6 +2,12 @@ import fastapi
 from fastapi.middleware.cors import CORSMiddleware
 import time
 import threading
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv('API_KEY')
 
 import trovo
 import twitch
@@ -12,7 +18,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["GET, POST"],
     allow_headers=["*"],
 )
 
@@ -80,6 +86,13 @@ def get_streams():
 
     with streams_lock:
         return streams
+    
+@app.post("/add_yt_channel")
+def add_yt_channel(channel_id: str, key: str):
+    if key != API_KEY:
+        return {'message': 'invalid key'}
+
+    return youtube.add_channel(channel_id)
 
 
 if __name__ == "__main__":

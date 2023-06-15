@@ -35,12 +35,21 @@ def get_video_info(video_id):
     return response["items"][0]
 
 
-def insert_channel(channel_id):
+def add_channel(channel_id):
     channel_info = get_channel_info(channel_id)
+    if "snippet" not in channel_info:
+        return {'error': 'channel not found'}
+
     channel_name = channel_info["snippet"]["title"]
     channel_thumbnail = channel_info["snippet"]["thumbnails"]["medium"]["url"]
 
-    db.insert_youtube_channels([(channel_id, channel_name, channel_thumbnail)])
+    try:
+        db.insert_youtube_channels(
+            [(channel_id, channel_name, channel_thumbnail)])
+    except Exception as e:
+        return {'error': str(e)}
+
+    return {'success': 'channel added', 'channel_id': channel_id, 'channel_name': channel_name}
 
 
 def get_streams_all():
