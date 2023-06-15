@@ -87,11 +87,11 @@ def get_streams():
     with streams_lock:
         return streams
     
-@app.post("/add_yt_channel")
+@app.get("/add_yt_channel")
 def add_yt_channel(channel_id: str, key: str):
     if key != API_KEY:
         return {'message': 'invalid key'}
-
+    
     return youtube.add_channel(channel_id)
 
 
