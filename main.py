@@ -16,7 +16,7 @@ import youtube
 app = fastapi.FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://kdojelive-frontend.vercel.app, https://kdoje.live, http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET"],
     allow_headers=["*"],
